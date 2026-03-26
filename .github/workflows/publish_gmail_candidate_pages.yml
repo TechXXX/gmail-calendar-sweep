@@ -21,7 +21,7 @@ jobs:
       GMAIL_CANDIDATE_TOKEN_JSON: ${{ secrets.GMAIL_CANDIDATE_TOKEN_JSON }}
       GMAIL_SCAN_QUERY: ${{ inputs.gmail_query || vars.GMAIL_SCAN_QUERY || 'in:anywhere -in:chats newer_than:40d' }}
       RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-      CALENDAR_NAME: Gmail Candidate Tests
+      CALENDAR_NAME: Email-Derived Events
     steps:
       - name: Check out default branch
         uses: actions/checkout@v4
