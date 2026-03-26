@@ -7,6 +7,11 @@ on:
         description: Gmail search query override
         required: false
         type: string
+      force_weekly_email:
+        description: Force the weekly candidate summary email on this manual run
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: "17 5 * * *"
 
@@ -74,7 +79,7 @@ jobs:
 
       - name: Decide weekly email schedule
         run: |
-          if [ "$(TZ=Europe/Berlin date +%u)" = "1" ]; then
+          if [ "${{ inputs.force_weekly_email }}" = "true" ] || [ "$(TZ=Europe/Berlin date +%u)" = "1" ]; then
             echo "WEEKLY_EMAIL_ENABLED=1" >> "$GITHUB_ENV"
           else
             echo "WEEKLY_EMAIL_ENABLED=0" >> "$GITHUB_ENV"
