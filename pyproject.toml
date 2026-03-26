@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gmail-candidate-scan"
+version = "0.1.0"
+description = "Local Gmail discovery tool for calendar-worthy email candidates."
+requires-python = ">=3.10"
+dependencies = [
+  "google-api-python-client>=2.170.0",
+  "google-auth-oauthlib>=1.2.0",
+]
+
+[project.scripts]
+gmail-candidate-scan = "gmail_candidate_scan.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["gmail_candidate_scan*"]

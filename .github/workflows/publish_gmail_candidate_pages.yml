@@ -1,0 +1,103 @@
+name: Publish Gmail Candidate Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      gmail_query:
+        description: Gmail search query override
+        required: false
+        type: string
+  schedule:
+    - cron: "17 5 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  scan-and-publish:
+    runs-on: ubuntu-latest
+    env:
+      GMAIL_CANDIDATE_NONINTERACTIVE: "1"
+      GMAIL_CANDIDATE_TOKEN_JSON: ${{ secrets.GMAIL_CANDIDATE_TOKEN_JSON }}
+      GMAIL_SCAN_QUERY: ${{ inputs.gmail_query || vars.GMAIL_SCAN_QUERY || 'in:anywhere -in:chats newer_than:40d' }}
+      RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      CALENDAR_NAME: Gmail Candidate Tests
+    steps:
+      - name: Check out default branch
+        uses: actions/checkout@v4
+
+      - name: Generate run ID
+        run: echo "RUN_ID=$(date -u +%Y%m%d_%H%M%S)" >> "$GITHUB_ENV"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run discovery
+        run: |
+          gmail-candidate-scan discover \
+            --query "${GMAIL_SCAN_QUERY}" \
+            --run-id "${RUN_ID}"
+
+      - name: Run calendar preview
+        run: |
+          gmail-candidate-scan calendar-preview \
+            --query "${GMAIL_SCAN_QUERY}" \
+            --calendar-name "${CALENDAR_NAME}" \
+            --run-id "${RUN_ID}"
+
+      - name: Run calendar create
+        run: |
+          gmail-candidate-scan calendar-create \
+            --query "${GMAIL_SCAN_QUERY}" \
+            --calendar-name "${CALENDAR_NAME}" \
+            --run-id "${RUN_ID}"
+
+      - name: Upload private operator artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gmail-candidate-output-${{ env.RUN_ID }}
+          path: output/
+
+      - name: Check out gh-pages branch
+        id: checkout_pages
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: .gh-pages
+
+      - name: Initialize gh-pages if missing
+        if: steps.checkout_pages.outcome != 'success'
+        run: |
+          mkdir -p .gh-pages
+          cd .gh-pages
+          git init
+          git checkout --orphan gh-pages
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+
+      - name: Build Pages bundle
+        run: |
+          gmail-candidate-scan pages-build \
+            --site-dir docs \
+            --output-dir .gh-pages
+
+      - name: Publish gh-pages
+        run: |
+          cd .gh-pages
+          touch .nojekyll
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --cached --quiet; then
+            echo "No Pages changes to publish"
+            exit 0
+          fi
+          git commit -m "Publish Gmail candidate run ${RUN_ID}"
+          git push -u origin gh-pages

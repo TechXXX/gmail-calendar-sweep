@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gmail Candidate Scanner</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">GitHub Pages Dashboard</p>
+      <h1>Gmail Candidate Scanner</h1>
+      <p class="lede">
+        Deterministic Gmail discovery, Google Calendar preview, and daily create history.
+      </p>
+      <div class="hero-grid" id="summary-cards"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Latest Run</p>
+          <h2 id="latest-title">Loading</h2>
+        </div>
+        <p class="meta" id="latest-meta"></p>
+      </div>
+      <div class="stats-grid" id="latest-stats"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Discovery</p>
+          <h2>Redacted Candidates</h2>
+        </div>
+        <p class="meta">New rows are highlighted relative to the previous published run.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Category</th>
+              <th>Subject</th>
+              <th>Snippet</th>
+              <th>Dates</th>
+              <th>Times</th>
+              <th>Sender Domain</th>
+            </tr>
+          </thead>
+          <tbody id="discover-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel-grid">
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Preview</p>
+            <h2>Calendar Outcomes</h2>
+          </div>
+        </div>
+        <div class="table-wrap compact">
+          <table>
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>Outcome</th>
+                <th>Title</th>
+                <th>Timing</th>
+              </tr>
+            </thead>
+            <tbody id="preview-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Create</p>
+            <h2>Write Results</h2>
+          </div>
+        </div>
+        <div class="table-wrap compact">
+          <table>
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>Outcome</th>
+                <th>Subject</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody id="create-rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">History</p>
+          <h2>Published Runs</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Run ID</th>
+              <th>Generated</th>
+              <th>Query</th>
+              <th>Candidates</th>
+              <th>New</th>
+              <th>Would Create</th>
+              <th>Created</th>
+              <th>Failed</th>
+            </tr>
+          </thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <template id="empty-row-template">
+    <tr><td colspan="8" class="empty">No data published yet.</td></tr>
+  </template>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
