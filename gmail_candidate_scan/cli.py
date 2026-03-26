@@ -262,6 +262,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_PAGES_OUTPUT_DIR,
         help="Target directory for the generated Pages site.",
     )
+
     return parser
 
 
