@@ -1,0 +1,250 @@
+:root {
+  --paper: #f4efe4;
+  --ink: #1f2430;
+  --muted: #60686f;
+  --panel: rgba(255, 252, 245, 0.88);
+  --line: rgba(31, 36, 48, 0.12);
+  --accent: #b54d2e;
+  --accent-soft: rgba(181, 77, 46, 0.12);
+  --green: #215c44;
+  --blue: #2b5f8b;
+  --gold: #8b6a19;
+  --shadow: 0 18px 50px rgba(50, 38, 18, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  background:
+    radial-gradient(circle at top left, rgba(181, 77, 46, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(43, 95, 139, 0.12), transparent 30%),
+    linear-gradient(180deg, #efe8d8 0%, var(--paper) 32%, #f8f4ec 100%);
+}
+
+table,
+button,
+.meta,
+.eyebrow,
+.stat-label,
+.card-label {
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+.shell {
+  width: min(1400px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 28px 0 56px;
+}
+
+.hero,
+.panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+}
+
+.hero {
+  padding: 28px;
+  border-radius: 28px;
+}
+
+.hero h1,
+.panel h2 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 4vw, 4rem);
+  line-height: 0.95;
+  max-width: 10ch;
+}
+
+.lede {
+  max-width: 52rem;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.55;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 0.76rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.hero-grid,
+.stats-grid,
+.panel-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.hero-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 22px;
+}
+
+.stats-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.panel-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.card,
+.stat {
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 250, 241, 0.94));
+}
+
+.card-value,
+.stat-value {
+  font-size: 1.8rem;
+  line-height: 1;
+  margin-top: 6px;
+}
+
+.card-label,
+.stat-label,
+.meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.panel {
+  margin-top: 18px;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  padding: 22px 24px 14px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent);
+}
+
+.table-wrap {
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+th,
+td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  text-align: left;
+}
+
+th {
+  font-size: 0.77rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.36);
+}
+
+tbody tr:hover {
+  background: rgba(181, 77, 46, 0.04);
+}
+
+.compact table {
+  min-width: 100%;
+}
+
+.pill {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.pill.new {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: rgba(181, 77, 46, 0.24);
+}
+
+.pill.created,
+.pill.would_create {
+  color: var(--green);
+}
+
+.pill.skipped_existing {
+  color: var(--blue);
+}
+
+.pill.skipped_ambiguous,
+.pill.failed {
+  color: var(--gold);
+}
+
+.empty {
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 1100px) {
+  .hero-grid,
+  .stats-grid,
+  .panel-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .shell {
+    width: min(100vw - 16px, 1400px);
+    padding-top: 12px;
+  }
+
+  .hero,
+  .panel {
+    border-radius: 18px;
+  }
+
+  .hero,
+  .panel-head {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .hero-grid,
+  .stats-grid,
+  .panel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-head {
+    flex-direction: column;
+    align-items: start;
+  }
+}
