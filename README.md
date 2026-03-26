@@ -1,35 +1,93 @@
 # Gmail Calendar Sweep
 
-This repo now has two tracks:
+Deterministic Gmail-to-Google-Calendar automation with:
 
-- a local Python tool for broad Gmail discovery and CSV review
-- the earlier Apps Script prototype, kept for reference and possible later automation
+- a public summary dashboard on GitHub Pages
+- a scheduled GitHub Actions backend
+- a local Python CLI for development, debugging, and first-time OAuth setup
 
-The Python tool is the current path. It scans Gmail through the Gmail API, looks for calendar-worthy candidates, writes a deterministic CSV/HTML review surface, and can create Google Calendar events through the Google Calendar API.
+Live dashboard:
 
-The repo now also includes a GitHub Pages-centered deployment path:
+- [techxxx.github.io/gmail-calendar-sweep](https://techxxx.github.io/gmail-calendar-sweep/)
 
-- GitHub Actions runs the existing Python pipeline on a daily schedule
-- the workflow publishes a redacted static dashboard to `gh-pages`
-- full CSV/HTML operator artifacts are uploaded as private workflow artifacts
+Repository:
 
-## Local Python Tool
+- [TechXXX/gmail-calendar-sweep](https://github.com/TechXXX/gmail-calendar-sweep)
 
-### What it does
+## How It Works
 
-- connects to Gmail with the read-only Gmail API
-- requires an explicit Gmail query for discovery; there is no default scan window
-- looks for likely travel, appointments, events, deadlines, and deliveries
-- requires concrete scheduling evidence where possible to reduce false positives
-- suppresses common noise sources such as newsletters, receipts, and generic promo mail
-- writes stable CSV output to `/Users/kalter/Documents/CODEX/googlescript/output/candidates.csv`
-- also writes an HTML review report to `/Users/kalter/Documents/CODEX/googlescript/output/candidates.html`
-- also writes structured JSON output to `/Users/kalter/Documents/CODEX/googlescript/output/candidates.json`
+The product has three layers:
+
+- GitHub Actions runs the actual Gmail scan and Google Calendar write flow on a schedule
+- GitHub Pages publishes a redacted public summary of the latest and historical runs
+- the Python package remains the execution engine for discovery, preview, create, and dedupe
+
+Current pipeline:
+
+```bash
+gmail-candidate-scan discover --query '...'
+gmail-candidate-scan calendar-preview
+gmail-candidate-scan calendar-create
+gmail-candidate-scan pages-build
+```
+
+The system is deterministic:
+
+- Gmail discovery is rule-based, not AI-driven
+- parsing and extraction live in `gmail_candidate_scan/`
+- Google Calendar duplicate prevention uses the Gmail message ID stored in Calendar metadata and description
+
+## Public vs Private Data
+
+Public GitHub Pages is intentionally summary-only.
+
+Publicly exposed:
+
+- total candidate counts
+- category counts
+- preview/create outcome counts
+- run timestamps
+- the configured Gmail query string
+
+Not publicly exposed:
+
+- Gmail credentials or OAuth tokens
+- raw email bodies
+- candidate-level subjects or snippets
+- sender emails
+- per-row preview/create details
+- full CSV or HTML operator reports
+
+Private operator outputs stay in GitHub Actions artifacts and local files under `output/`.
+
+## Hosted Automation
+
+The repository includes `.github/workflows/publish_gmail_candidate_pages.yml`.
+
+It:
+
+- runs on a daily schedule
+- also supports manual workflow dispatch
+- runs discovery, preview, create, and Pages build
+- uploads full `output/` artifacts privately in GitHub Actions
+- publishes the redacted dashboard to `gh-pages`
+
+Required GitHub configuration:
+
+- repository secret: `GMAIL_CANDIDATE_TOKEN_JSON`
+- optional repository variable: `GMAIL_SCAN_QUERY`
+- GitHub Pages source: `gh-pages` branch, `/ (root)`
+
+## Local Development
+
+The Python CLI is still the source of truth for the product behavior. Local usage matters for:
+
+- first-time OAuth consent
+- debugging parser/extraction logic
+- backfills and one-off scans
+- validating behavior before changing the scheduled workflow
 
 ### Setup
-
-1. Create a Python virtual environment in `/Users/kalter/Documents/CODEX/googlescript`.
-2. Install the package in editable mode:
 
 ```bash
 python3 -m venv .venv
@@ -37,66 +95,39 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-3. In Google Cloud, enable both the Gmail API and the Google Calendar API, then create an OAuth Desktop App client.
-4. Save the downloaded client JSON to `/Users/kalter/Documents/CODEX/googlescript/secrets/gmail_credentials.json`.
-5. Run the scanner:
+In Google Cloud:
 
-```bash
-gmail-candidate-scan discover --query 'in:anywhere -in:chats newer_than:30d'
-```
+1. Enable Gmail API and Google Calendar API.
+2. Create an OAuth Desktop App client.
+3. Save the client JSON to `/Users/kalter/Documents/CODEX/googlescript/secrets/gmail_credentials.json`.
 
-The first run opens a browser for consent and saves the token to `/Users/kalter/Documents/CODEX/googlescript/secrets/gmail_token.json`.
+The first interactive run will save the authorized token to:
 
-### Usage
+- `/Users/kalter/Documents/CODEX/googlescript/secrets/gmail_token.json`
+
+### Common Commands
+
+Discovery:
 
 ```bash
 gmail-candidate-scan \
   discover \
-  --query 'in:anywhere -in:chats newer_than:30d' \
-  --max-messages 3000 \
-  --output /Users/kalter/Documents/CODEX/googlescript/output/candidates.csv \
-  --report /Users/kalter/Documents/CODEX/googlescript/output/candidates.html \
-  --json-report /Users/kalter/Documents/CODEX/googlescript/output/candidates.json
+  --query 'in:anywhere -in:chats newer_than:40d'
 ```
 
-For backward compatibility, `gmail-candidate-scan --query ...` still runs discovery even without the explicit `discover` subcommand, but `--query` is now required.
-
-### Create Google Calendar Events
-
-Create events in Google Calendar from the current candidate CSV:
-
-```bash
-gmail-candidate-scan calendar-create --dry-run
-gmail-candidate-scan calendar-create --limit 3
-```
-
-Behavior:
-
-- reads from `/Users/kalter/Documents/CODEX/googlescript/output/candidates.csv` by default
-- treats CSV order as the visible HTML sheet line item numbering, and uses those HTML row numbers when reporting actions
-- enriches selected rows with the full Gmail message before generating Calendar titles and locations
-- creates or reuses a dedicated Google Calendar named `Gmail Candidate Tests`
-- embeds a stable Gmail message marker in Google Calendar event metadata and description to avoid duplicates on reruns
-- skips ambiguous rows instead of guessing event times
-- writes an HTML action report to `/Users/kalter/Documents/CODEX/googlescript/output/calendar_create.html`
-- also writes structured JSON output to `/Users/kalter/Documents/CODEX/googlescript/output/calendar_create.json`
-- will require one re-consent if your cached token was created before Calendar scopes were added
-
-### Preview Google Calendar Events
+Preview Calendar writes:
 
 ```bash
 gmail-candidate-scan calendar-preview
 ```
 
-Behavior:
+Create Calendar events:
 
-- reads from `/Users/kalter/Documents/CODEX/googlescript/output/candidates.csv` by default
-- writes `/Users/kalter/Documents/CODEX/googlescript/output/calendar_preview.html`
-- also writes `/Users/kalter/Documents/CODEX/googlescript/output/calendar_preview.json`
+```bash
+gmail-candidate-scan calendar-create
+```
 
-### Build the Static Pages Bundle
-
-Build a publishable static site from the latest JSON outputs:
+Build the static Pages bundle locally:
 
 ```bash
 gmail-candidate-scan pages-build \
@@ -104,78 +135,66 @@ gmail-candidate-scan pages-build \
   --output-dir /Users/kalter/Documents/CODEX/googlescript/output/pages
 ```
 
-This creates:
+### Local Outputs
 
-- `data/latest/` with the newest redacted discovery, preview, and create JSON
-- `data/runs/<run_id>/` with timestamped historical snapshots
-- `data/runs/index.json` for the run history index used by the dashboard
+Discovery writes:
 
-The published dashboard intentionally redacts sensitive content:
+- `output/candidates.csv`
+- `output/candidates.html`
+- `output/candidates.json`
 
-- no candidate-level subject, snippet, sender, timing, or location text
-- no full Gmail body text
-- only aggregate summary counts and category/outcome breakdowns are published
+Preview writes:
 
-For local/operator use, full row-level review still lives in the private CSV/HTML outputs and workflow artifacts. Public GitHub Pages is intentionally summary-only.
+- `output/calendar_preview.html`
+- `output/calendar_preview.json`
 
-### Non-Interactive Auth for CI
+Create writes:
 
-Interactive local OAuth is still the default for local development. For CI or GitHub Actions, set:
+- `output/calendar_create.html`
+- `output/calendar_create.json`
+
+Pages build writes:
+
+- `output/pages/data/latest/`
+- `output/pages/data/runs/<run_id>/`
+- `output/pages/data/runs/index.json`
+
+## CI Auth
+
+Local development uses interactive OAuth by default.
+
+CI and GitHub Actions use non-interactive auth:
 
 - `GMAIL_CANDIDATE_NONINTERACTIVE=1`
-- `GMAIL_CANDIDATE_TOKEN_JSON` to an authorized user token JSON containing Gmail + Calendar scopes
+- `GMAIL_CANDIDATE_TOKEN_JSON=<authorized token json>`
 
-In non-interactive mode the tool will:
+In non-interactive mode the tool:
 
-- load the authorized token from the environment or token file
-- refresh it when possible
-- fail with a clear error instead of opening a browser if credentials are missing or under-scoped
+- loads the authorized token from env or token file
+- refreshes it when possible
+- fails instead of opening a browser if the token is missing or under-scoped
 
-### GitHub Pages Workflow
+## Implementation Notes
 
-The repo includes `.github/workflows/publish_gmail_candidate_pages.yml`.
+The current implementation is all deterministic heuristics plus Google APIs.
 
-It:
+Key modules:
 
-- runs daily and also supports manual dispatch
-- runs `discover`, `calendar-preview`, and `calendar-create`
-- uploads the full `output/` directory as a private workflow artifact
-- builds the redacted static dashboard from `docs/`
-- updates the `gh-pages` branch with `latest/` and historical `runs/`
+- `gmail_candidate_scan/extraction.py`
+- `gmail_candidate_scan/calendar_integration.py`
+- `gmail_candidate_scan/cli.py`
 
-Expected repository configuration:
+Behavioral notes:
 
-1. Add repository secret `GMAIL_CANDIDATE_TOKEN_JSON`.
-2. Add repository variable `GMAIL_SCAN_QUERY` if you do not want the default `in:anywhere -in:chats newer_than:40d`.
-3. Configure GitHub Pages to serve from the `gh-pages` branch root.
+- discovery output is sorted deterministically by Gmail internal timestamp and Gmail message ID
+- Google Calendar dedupe is based on Gmail message ID
+- the classifier is intentionally conservative and requires timing evidence for many categories
 
-### CSV Columns
+## Apps Script
 
-- `gmail_id`
-- `thread_id`
-- `internal_datetime`
-- `category`
-- `confidence`
-- `sender`
-- `sender_email`
-- `subject`
-- `matched_dates`
-- `matched_times`
-- `reason_flags`
-- `snippet`
+The older Apps Script prototype is still in the repo:
 
-### Stability Notes
+- `Code.js`
+- `appsscript.json`
 
-- Messages are fetched, normalized, and then sorted deterministically by Gmail internal timestamp and message ID before classification.
-- CSV output is rewritten from scratch on each run for the same input set.
-- JSON output is emitted alongside CSV/HTML so downstream automation and GitHub Pages can consume stable machine-readable data.
-- The classifier is intentionally conservative: for most categories it requires explicit date or time evidence instead of generic keywords alone.
-
-## Apps Script Prototype
-
-The older Apps Script files are still here:
-
-- `/Users/kalter/Documents/CODEX/googlescript/Code.js`
-- `/Users/kalter/Documents/CODEX/googlescript/appsscript.json`
-
-Those are useful as reference for category ideas and batching lessons, but they are not the primary implementation now. Once the discovery patterns are good enough, ongoing automation can still move back into Apps Script if that proves more convenient.
+It is reference material only. The active implementation is the Python package plus GitHub Actions and GitHub Pages.
