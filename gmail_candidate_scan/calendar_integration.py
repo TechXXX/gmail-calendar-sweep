@@ -10,7 +10,7 @@ from .extraction import Candidate
 from .gmail_client import MessageRecord
 
 
-CALENDAR_NAME = "Gmail Candidate Tests"
+CALENDAR_NAME = "Email-Derived Events"
 IDENTITY_PREFIX = "gmail_candidate_id="
 IDENTITY_FIELD = "gmail_candidate_id"
 

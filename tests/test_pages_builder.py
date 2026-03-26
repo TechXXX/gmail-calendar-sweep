@@ -83,7 +83,7 @@ class PagesBuilderTests(unittest.TestCase):
                 "run_id": "20260326_101500",
                 "generated_at": "2026-03-26T10:16:00+00:00",
                 "query": "in:anywhere -in:chats newer_than:40d",
-                "calendar_name": "Gmail Candidate Tests",
+                "calendar_name": "Email-Derived Events",
                 "summary": {
                     "row_count": 2,
                     "would_create": 1,
@@ -107,7 +107,7 @@ class PagesBuilderTests(unittest.TestCase):
                 "run_id": "20260326_101500",
                 "generated_at": "2026-03-26T10:17:00+00:00",
                 "query": "in:anywhere -in:chats newer_than:40d",
-                "calendar_name": "Gmail Candidate Tests",
+                "calendar_name": "Email-Derived Events",
                 "summary": {
                     "created": 1,
                     "skipped_existing": 1,
