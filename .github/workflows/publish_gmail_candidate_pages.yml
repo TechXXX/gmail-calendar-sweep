@@ -19,7 +19,7 @@ jobs:
     env:
       GMAIL_CANDIDATE_NONINTERACTIVE: "1"
       GMAIL_CANDIDATE_TOKEN_JSON: ${{ secrets.GMAIL_CANDIDATE_TOKEN_JSON }}
-      GMAIL_SCAN_QUERY: ${{ inputs.gmail_query || vars.GMAIL_SCAN_QUERY || 'in:anywhere -in:chats newer_than:40d' }}
+      GMAIL_SCAN_QUERY: ${{ inputs.gmail_query || vars.GMAIL_SCAN_QUERY || 'in:anywhere -in:chats newer_than:2d' }}
       RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
       CALENDAR_NAME: Email-Derived Events
     steps:
@@ -64,6 +64,92 @@ jobs:
         with:
           name: gmail-candidate-output-${{ env.RUN_ID }}
           path: output/
+
+      - name: Package private review bundle for email
+        if: ${{ secrets.SMTP_HOST != '' && secrets.SMTP_USERNAME != '' && secrets.SMTP_PASSWORD != '' && secrets.OPERATOR_EMAIL_TO != '' }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+
+          import os
+
+          root = Path("output")
+          bundle_path = root / f"gmail-candidate-review-{os.environ['RUN_ID']}.zip"
+          include_paths = [
+              root / "candidates.html",
+              root / "calendar_preview.html",
+              root / "calendar_create.html",
+              root / "candidates.csv",
+              root / "candidates.json",
+              root / "calendar_preview.json",
+              root / "calendar_create.json",
+          ]
+
+          with zipfile.ZipFile(bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+              for path in include_paths:
+                  if path.exists():
+                      archive.write(path, arcname=path.relative_to(root))
+
+          print(f"REVIEW_BUNDLE={bundle_path}")
+          with Path(__import__('os').environ["GITHUB_ENV"]).open("a", encoding="utf-8") as handle:
+              handle.write(f"REVIEW_BUNDLE={bundle_path}\n")
+          PY
+
+      - name: Email private review bundle
+        if: ${{ secrets.SMTP_HOST != '' && secrets.SMTP_USERNAME != '' && secrets.SMTP_PASSWORD != '' && secrets.OPERATOR_EMAIL_TO != '' }}
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '465' }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          OPERATOR_EMAIL_TO: ${{ secrets.OPERATOR_EMAIL_TO }}
+          OPERATOR_EMAIL_FROM: ${{ secrets.OPERATOR_EMAIL_FROM || secrets.SMTP_USERNAME }}
+          REVIEW_BUNDLE: ${{ env.REVIEW_BUNDLE }}
+          GMAIL_SCAN_QUERY: ${{ env.GMAIL_SCAN_QUERY }}
+          RUN_ID: ${{ env.RUN_ID }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          from email.message import EmailMessage
+          from pathlib import Path
+          import mimetypes
+          import os
+          import smtplib
+          import ssl
+
+          bundle_path = Path(os.environ["REVIEW_BUNDLE"])
+          recipient = os.environ["OPERATOR_EMAIL_TO"]
+          sender = os.environ["OPERATOR_EMAIL_FROM"]
+
+          message = EmailMessage()
+          message["Subject"] = f"Gmail candidate review bundle {os.environ['RUN_ID']}"
+          message["From"] = sender
+          message["To"] = recipient
+          message.set_content(
+              "\n".join(
+                  [
+                      f"Repository: {os.environ['GITHUB_REPOSITORY']}",
+                      f"Run ID: {os.environ['RUN_ID']}",
+                      f"Workflow run: https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+                      f"Query: {os.environ['GMAIL_SCAN_QUERY']}",
+                      "",
+                      "Attached ZIP includes the private review outputs from this run.",
+                  ]
+              )
+          )
+
+          data = bundle_path.read_bytes()
+          mime_type, _ = mimetypes.guess_type(bundle_path.name)
+          maintype, subtype = (mime_type or "application/zip").split("/", 1)
+          message.add_attachment(data, maintype=maintype, subtype=subtype, filename=bundle_path.name)
+
+          context = ssl.create_default_context()
+          with smtplib.SMTP_SSL(os.environ["SMTP_HOST"], int(os.environ["SMTP_PORT"]), context=context) as server:
+              server.login(os.environ["SMTP_USERNAME"], os.environ["SMTP_PASSWORD"])
+              server.send_message(message)
+          PY
 
       - name: Check out gh-pages branch
         id: checkout_pages
