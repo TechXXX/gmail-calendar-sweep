@@ -88,6 +88,8 @@ jobs:
       - name: Build weekly discovery summary
         if: ${{ env.WEEKLY_EMAIL_ENABLED == '1' && env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.OPERATOR_EMAIL_TO != '' }}
         run: |
+          echo "WEEKLY_SUMMARY_END=$(TZ=Europe/Berlin date +%F)" >> "$GITHUB_ENV"
+          echo "WEEKLY_SUMMARY_START=$(TZ=Europe/Berlin date -d '6 days ago' +%F)" >> "$GITHUB_ENV"
           gmail-candidate-scan discover \
             --query "${GMAIL_WEEKLY_SUMMARY_QUERY}" \
             --output output/weekly_candidates.csv \
@@ -128,6 +130,8 @@ jobs:
           REVIEW_BUNDLE: ${{ env.REVIEW_BUNDLE }}
           GMAIL_WEEKLY_SUMMARY_QUERY: ${{ env.GMAIL_WEEKLY_SUMMARY_QUERY }}
           RUN_ID: ${{ env.RUN_ID }}
+          WEEKLY_SUMMARY_START: ${{ env.WEEKLY_SUMMARY_START }}
+          WEEKLY_SUMMARY_END: ${{ env.WEEKLY_SUMMARY_END }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_RUN_ID: ${{ github.run_id }}
         run: |
@@ -144,7 +148,8 @@ jobs:
           sender = os.environ["OPERATOR_EMAIL_FROM"]
 
           message = EmailMessage()
-          message["Subject"] = f"Gmail weekly candidate summary {os.environ['RUN_ID']}"
+          date_range = f"{os.environ['WEEKLY_SUMMARY_START']} to {os.environ['WEEKLY_SUMMARY_END']}"
+          message["Subject"] = f"Gmail weekly candidate summary {date_range}"
           message["From"] = sender
           message["To"] = recipient
           message.set_content(
@@ -153,6 +158,7 @@ jobs:
                       f"Repository: {os.environ['GITHUB_REPOSITORY']}",
                       f"Run ID: {os.environ['RUN_ID']}",
                       f"Workflow run: https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+                      f"Date range: {date_range} (Europe/Berlin)",
                       f"Weekly summary query: {os.environ['GMAIL_WEEKLY_SUMMARY_QUERY']}",
                       "",
                       "Attached ZIP includes the seven-day private candidate summary.",
