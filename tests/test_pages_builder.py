@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from gmail_candidate_scan.pages_builder import build_pages_site
+from gmail_candidate_scan.pages_builder import _candidate_hash, build_pages_site
 
 
 class PagesBuilderTests(unittest.TestCase):
@@ -18,27 +18,18 @@ class PagesBuilderTests(unittest.TestCase):
 
             output_dir = root / "published"
             (output_dir / "data" / "latest").mkdir(parents=True)
+            previous_candidate_row = {
+                "gmail_id": "same-id",
+                "category": "travel",
+                "matched_dates": ["1 Apr 2026"],
+                "matched_times": ["10:00"],
+            }
             previous_discover = {
                 "run_id": "20260325_090000",
                 "generated_at": "2026-03-25T09:00:00+00:00",
                 "query": "old",
                 "summary": {"candidate_count": 1, "scanned_message_count": 3, "top_category": "travel (1)", "highest_confidence": 5, "new_candidates": 1},
-                "candidates": [
-                    {
-                        "row_number": 1,
-                        "key": "same-id::travel::1 Apr 2026::10:00",
-                        "is_new": True,
-                        "internal_datetime": "2026-03-25T08:00:00+00:00",
-                        "category": "travel",
-                        "confidence": 5,
-                        "subject": "Old row",
-                        "snippet": "Old snippet",
-                        "matched_dates": ["1 Apr 2026"],
-                        "matched_times": ["10:00"],
-                        "reason_flags": ["category:travel"],
-                        "sender_domain": "example.com",
-                    }
-                ],
+                "candidate_hashes": [_candidate_hash(previous_candidate_row)],
             }
             (output_dir / "data" / "latest" / "discover.json").write_text(
                 json.dumps(previous_discover),
@@ -151,12 +142,12 @@ class PagesBuilderTests(unittest.TestCase):
             history = json.loads((output_dir / "data" / "runs" / "index.json").read_text(encoding="utf-8"))
 
             self.assertEqual(latest_discover["summary"]["new_candidates"], 1)
-            self.assertFalse(latest_discover["candidates"][0]["is_new"])
-            self.assertTrue(latest_discover["candidates"][1]["is_new"])
-            self.assertEqual(latest_discover["candidates"][1]["subject"], "Concert invite [email]")
-            self.assertIn("[phone]", latest_discover["candidates"][1]["snippet"])
-            self.assertEqual(latest_preview["rows"][0]["location"], "")
-            self.assertEqual(latest_create["lines"][0]["detail"], "Room [id]")
+            self.assertEqual(latest_discover["summary"]["category_counts"]["travel"], 1)
+            self.assertEqual(latest_discover["summary"]["category_counts"]["event"], 1)
+            self.assertEqual(latest_discover["summary"]["new_category_counts"]["event"], 1)
+            self.assertNotIn("candidates", latest_discover)
+            self.assertEqual(latest_preview["summary"]["outcome_counts"]["would_create"], 1)
+            self.assertEqual(latest_create["summary"]["outcome_counts"]["created"], 1)
             self.assertEqual(history["latest_run_id"], "20260326_101500")
             self.assertEqual(history["runs"][0]["candidate_count"], 2)
 

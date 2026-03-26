@@ -39,7 +39,7 @@ function renderSummaryCards(index) {
 function renderLatest(discover, preview, create) {
   document.querySelector("#latest-title").textContent = `Run ${discover.run_id}`;
   document.querySelector("#latest-meta").textContent =
-    `Generated ${formatDateTime(discover.generated_at)} | Query: ${discover.query}`;
+    `Generated ${formatDateTime(discover.generated_at)} | Public dashboard shows summary-only data`;
 
   const stats = [
     { label: "Candidates", value: discover.summary.candidate_count },
@@ -52,56 +52,50 @@ function renderLatest(discover, preview, create) {
     .map((stat) => `<article class="stat"><div class="stat-label">${stat.label}</div><div class="stat-value">${stat.value}</div></article>`)
     .join("");
 
-  const discoverRows = discover.candidates || [];
+  const categoryCounts = discover.summary.category_counts || {};
+  const newCategoryCounts = discover.summary.new_category_counts || {};
+  const discoverRows = Object.keys(categoryCounts).sort();
   document.querySelector("#discover-rows").innerHTML = discoverRows.length
     ? discoverRows
         .map(
-          (row) => `
+          (category) => `
             <tr>
-              <td>${row.row_number}<br>${row.is_new ? pill("new", "new") : ""}</td>
-              <td>${pill(row.category)}</td>
-              <td>${row.subject}</td>
-              <td>${row.snippet || "n/a"}</td>
-              <td>${(row.matched_dates || []).join("<br>") || "n/a"}</td>
-              <td>${(row.matched_times || []).join("<br>") || "n/a"}</td>
-              <td>${row.sender_domain || "n/a"}</td>
+              <td>${pill(category)}</td>
+              <td>${categoryCounts[category]}</td>
+              <td>${newCategoryCounts[category] || 0}</td>
             </tr>
           `,
         )
         .join("")
-    : emptyRow(7);
+    : emptyRow(3);
 
-  const previewRows = preview.rows || [];
+  const previewRows = Object.entries(preview.summary.outcome_counts || {});
   document.querySelector("#preview-rows").innerHTML = previewRows.length
     ? previewRows
         .map(
-          (row) => `
+          ([outcome, count]) => `
             <tr>
-              <td>${row.html_row_number}</td>
-              <td>${pill(row.outcome, row.outcome)}</td>
-              <td>${row.preview_title}</td>
-              <td>${row.timing || "n/a"}</td>
+              <td>${pill(outcome, outcome)}</td>
+              <td>${count}</td>
             </tr>
           `,
         )
         .join("")
-    : emptyRow(4);
+    : emptyRow(2);
 
-  const createRows = create.lines || [];
+  const createRows = Object.entries(create.summary.outcome_counts || {});
   document.querySelector("#create-rows").innerHTML = createRows.length
     ? createRows
         .map(
-          (row) => `
+          ([outcome, count]) => `
             <tr>
-              <td>${row.html_row_number}</td>
-              <td>${pill(row.outcome, row.outcome)}</td>
-              <td>${row.subject}</td>
-              <td>${row.detail || "n/a"}</td>
+              <td>${pill(outcome, outcome)}</td>
+              <td>${count}</td>
             </tr>
           `,
         )
         .join("")
-    : emptyRow(4);
+    : emptyRow(2);
 }
 
 function renderHistory(index) {
@@ -143,9 +137,9 @@ async function main() {
     document.querySelector("#latest-title").textContent = "No published runs";
     document.querySelector("#latest-meta").textContent = error.message;
     document.querySelector("#latest-stats").innerHTML = "";
-    document.querySelector("#discover-rows").innerHTML = emptyRow(7, "Publish a run to populate the dashboard.");
-    document.querySelector("#preview-rows").innerHTML = emptyRow(4, "Publish a run to populate the dashboard.");
-    document.querySelector("#create-rows").innerHTML = emptyRow(4, "Publish a run to populate the dashboard.");
+    document.querySelector("#discover-rows").innerHTML = emptyRow(3, "Publish a run to populate the dashboard.");
+    document.querySelector("#preview-rows").innerHTML = emptyRow(2, "Publish a run to populate the dashboard.");
+    document.querySelector("#create-rows").innerHTML = emptyRow(2, "Publish a run to populate the dashboard.");
     document.querySelector("#history-rows").innerHTML = emptyRow(8, "Publish a run to populate the dashboard.");
   }
 }

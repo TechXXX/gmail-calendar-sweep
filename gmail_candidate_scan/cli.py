@@ -166,6 +166,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Source Gmail query metadata for JSON output.",
     )
+    calendar_create.add_argument(
+        "--verbose-lines",
+        action="store_true",
+        help="Print per-row action lines to stdout.",
+    )
 
     calendar_preview = subparsers.add_parser(
         "calendar-preview",
@@ -379,8 +384,9 @@ def run_calendar_create(args) -> None:
         f"skipped_ambiguous={result.skipped_ambiguous} skipped_duplicate={result.skipped_duplicate} "
         f"failed={result.failed} dry_run={str(result.dry_run).lower()}"
     )
-    for line in result.lines:
-        print(line.render())
+    if args.verbose_lines:
+        for line in result.lines:
+            print(line.render())
     if previous_report_path:
         print(f"Archived previous calendar report to {previous_report_path}")
     print(f"Archived current calendar report to {current_report_path}")

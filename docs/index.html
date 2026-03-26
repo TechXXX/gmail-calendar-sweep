@@ -28,33 +28,28 @@
       <div class="stats-grid" id="latest-stats"></div>
     </section>
 
-    <section class="panel">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">Discovery</p>
-          <h2>Redacted Candidates</h2>
-        </div>
-        <p class="meta">New rows are highlighted relative to the previous published run.</p>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Category</th>
-              <th>Subject</th>
-              <th>Snippet</th>
-              <th>Dates</th>
-              <th>Times</th>
-              <th>Sender Domain</th>
-            </tr>
-          </thead>
-          <tbody id="discover-rows"></tbody>
-        </table>
-      </div>
-    </section>
-
     <section class="panel-grid">
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Preview</p>
+            <h2>Discovery Breakdown</h2>
+          </div>
+        </div>
+        <div class="table-wrap compact">
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Candidates</th>
+                <th>New</th>
+              </tr>
+            </thead>
+            <tbody id="discover-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="panel">
         <div class="panel-head">
           <div>
@@ -66,32 +61,29 @@
           <table>
             <thead>
               <tr>
-                <th>Row</th>
                 <th>Outcome</th>
-                <th>Title</th>
-                <th>Timing</th>
+                <th>Count</th>
               </tr>
             </thead>
             <tbody id="preview-rows"></tbody>
           </table>
         </div>
       </section>
+    </section>
 
-      <section class="panel">
-        <div class="panel-head">
-          <div>
-            <p class="eyebrow">Create</p>
-            <h2>Write Results</h2>
-          </div>
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Create</p>
+          <h2>Write Results</h2>
         </div>
-        <div class="table-wrap compact">
-          <table>
-            <thead>
-              <tr>
-                <th>Row</th>
+      </div>
+      <div class="table-wrap compact">
+        <table>
+          <thead>
+            <tr>
                 <th>Outcome</th>
-                <th>Subject</th>
-                <th>Detail</th>
+                <th>Count</th>
               </tr>
             </thead>
             <tbody id="create-rows"></tbody>

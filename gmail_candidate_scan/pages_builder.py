@@ -1,16 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+import hashlib
 import json
-import re
 import shutil
 from pathlib import Path
-
-EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)
-URL_RE = re.compile(r"https?://\S+", re.IGNORECASE)
-PHONE_RE = re.compile(r"\+?\d[\d\s().-]{6,}\d")
-DIGIT_RUN_RE = re.compile(r"\b\d{4,}\b")
-WHITESPACE_RE = re.compile(r"\s+")
 
 
 def build_pages_site(
@@ -75,30 +69,21 @@ def _copy_static_site(site_dir: Path, output_dir: Path) -> None:
 
 
 def _public_discover_payload(payload: dict, previous_latest: dict | None) -> dict:
-    previous_keys = {
-        candidate["key"]
-        for candidate in (previous_latest or {}).get("candidates", [])
-    }
-    candidates = []
+    previous_hashes = set((previous_latest or {}).get("candidate_hashes", []))
+    candidate_hashes: list[str] = []
+    category_counts: dict[str, int] = {}
+    new_category_counts: dict[str, int] = {}
+    confidence_counts: dict[str, int] = {}
     for row in payload.get("candidates", []):
-        key = _candidate_key(row)
-        candidates.append(
-            {
-                "row_number": row["row_number"],
-                "key": key,
-                "is_new": key not in previous_keys,
-                "internal_datetime": row["internal_datetime"],
-                "category": row["category"],
-                "confidence": row["confidence"],
-                "subject": _sanitize_text(row["subject"], limit=120),
-                "snippet": _sanitize_text(row["snippet"], limit=160),
-                "matched_dates": list(row.get("matched_dates", [])),
-                "matched_times": list(row.get("matched_times", [])),
-                "reason_flags": list(row.get("reason_flags", [])),
-                "sender_domain": _sender_domain(row.get("sender_email", "")),
-            }
-        )
-    new_candidates = sum(1 for item in candidates if item["is_new"])
+        candidate_hash = _candidate_hash(row)
+        candidate_hashes.append(candidate_hash)
+        category = row["category"]
+        confidence = str(row["confidence"])
+        category_counts[category] = category_counts.get(category, 0) + 1
+        confidence_counts[confidence] = confidence_counts.get(confidence, 0) + 1
+        if candidate_hash not in previous_hashes:
+            new_category_counts[category] = new_category_counts.get(category, 0) + 1
+    new_candidates = sum(new_category_counts.values())
     return {
         "run_id": payload["run_id"],
         "generated_at": payload["generated_at"],
@@ -106,53 +91,49 @@ def _public_discover_payload(payload: dict, previous_latest: dict | None) -> dic
         "summary": {
             **payload["summary"],
             "new_candidates": new_candidates,
+            "category_counts": category_counts,
+            "new_category_counts": new_category_counts,
+            "confidence_counts": confidence_counts,
         },
-        "candidates": candidates,
+        "candidate_hashes": candidate_hashes,
     }
 
 
 def _public_preview_payload(payload: dict) -> dict:
-    rows = []
+    outcome_counts: dict[str, int] = {}
+    category_counts: dict[str, int] = {}
     for row in payload.get("rows", []):
-        rows.append(
-            {
-                "html_row_number": row["html_row_number"],
-                "source_subject": _sanitize_text(row["source_subject"], limit=100),
-                "preview_title": _sanitize_text(row["preview_title"], limit=110),
-                "outcome": row["outcome"],
-                "timing": _sanitize_text(row["timing"], limit=120),
-                "location": "",
-                "category": row["category"],
-            }
-        )
+        outcome = row["outcome"]
+        category = row["category"]
+        outcome_counts[outcome] = outcome_counts.get(outcome, 0) + 1
+        category_counts[category] = category_counts.get(category, 0) + 1
     return {
         "run_id": payload["run_id"],
         "generated_at": payload["generated_at"],
         "query": payload.get("query", ""),
         "calendar_name": payload["calendar_name"],
-        "summary": payload["summary"],
-        "rows": rows,
+        "summary": {
+            **payload["summary"],
+            "outcome_counts": outcome_counts,
+            "category_counts": category_counts,
+        },
     }
 
 
 def _public_create_payload(payload: dict) -> dict:
-    lines = []
+    outcome_counts: dict[str, int] = {}
     for line in payload.get("lines", []):
-        lines.append(
-            {
-                "html_row_number": line["html_row_number"],
-                "subject": _sanitize_text(line["subject"], limit=110),
-                "outcome": line["outcome"],
-                "detail": _sanitize_text(line.get("detail") or "", limit=120),
-            }
-        )
+        outcome = line["outcome"]
+        outcome_counts[outcome] = outcome_counts.get(outcome, 0) + 1
     return {
         "run_id": payload["run_id"],
         "generated_at": payload["generated_at"],
         "query": payload.get("query", ""),
         "calendar_name": payload["calendar_name"],
-        "summary": payload["summary"],
-        "lines": lines,
+        "summary": {
+            **payload["summary"],
+            "outcome_counts": outcome_counts,
+        },
     }
 
 
@@ -190,21 +171,8 @@ def _candidate_key(row: dict) -> str:
     return f"{row['gmail_id']}::{row['category']}::{matched_dates}::{matched_times}"
 
 
-def _sender_domain(value: str) -> str:
-    if "@" not in value:
-        return ""
-    return value.rsplit("@", 1)[-1].lower()
-
-
-def _sanitize_text(value: str, limit: int) -> str:
-    text = WHITESPACE_RE.sub(" ", value or "").strip()
-    text = EMAIL_RE.sub("[email]", text)
-    text = URL_RE.sub("[link]", text)
-    text = PHONE_RE.sub("[phone]", text)
-    text = DIGIT_RUN_RE.sub("[id]", text)
-    if len(text) > limit:
-        return text[: limit - 1].rstrip() + "…"
-    return text
+def _candidate_hash(row: dict) -> str:
+    return hashlib.sha256(_candidate_key(row).encode("utf-8")).hexdigest()
 
 
 def _load_json(path: Path) -> dict:

@@ -112,9 +112,11 @@ This creates:
 
 The published dashboard intentionally redacts sensitive content:
 
+- no candidate-level subject, snippet, sender, timing, or location text
 - no full Gmail body text
-- no raw email addresses or phone numbers in surfaced text
-- no private location/address publication in preview/create data
+- only aggregate summary counts and category/outcome breakdowns are published
+
+For local/operator use, full row-level review still lives in the private CSV/HTML outputs and workflow artifacts. Public GitHub Pages is intentionally summary-only.
 
 ### Non-Interactive Auth for CI
 
