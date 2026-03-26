@@ -20,6 +20,7 @@ jobs:
       GMAIL_CANDIDATE_NONINTERACTIVE: "1"
       GMAIL_CANDIDATE_TOKEN_JSON: ${{ secrets.GMAIL_CANDIDATE_TOKEN_JSON }}
       GMAIL_SCAN_QUERY: ${{ inputs.gmail_query || vars.GMAIL_SCAN_QUERY || 'in:anywhere -in:chats newer_than:2d' }}
+      GMAIL_WEEKLY_SUMMARY_QUERY: ${{ vars.GMAIL_WEEKLY_SUMMARY_QUERY || 'in:anywhere -in:chats newer_than:7d' }}
       RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
       CALENDAR_NAME: Email-Derived Events
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -71,8 +72,26 @@ jobs:
           name: gmail-candidate-output-${{ env.RUN_ID }}
           path: output/
 
-      - name: Package private review bundle for email
-        if: ${{ env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.OPERATOR_EMAIL_TO != '' }}
+      - name: Decide weekly email schedule
+        run: |
+          if [ "$(TZ=Europe/Berlin date +%u)" = "1" ]; then
+            echo "WEEKLY_EMAIL_ENABLED=1" >> "$GITHUB_ENV"
+          else
+            echo "WEEKLY_EMAIL_ENABLED=0" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build weekly discovery summary
+        if: ${{ env.WEEKLY_EMAIL_ENABLED == '1' && env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.OPERATOR_EMAIL_TO != '' }}
+        run: |
+          gmail-candidate-scan discover \
+            --query "${GMAIL_WEEKLY_SUMMARY_QUERY}" \
+            --output output/weekly_candidates.csv \
+            --report output/weekly_candidates.html \
+            --json-report output/weekly_candidates.json \
+            --run-id "${RUN_ID}-weekly"
+
+      - name: Package weekly review bundle for email
+        if: ${{ env.WEEKLY_EMAIL_ENABLED == '1' && env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.OPERATOR_EMAIL_TO != '' }}
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -81,15 +100,11 @@ jobs:
           import os
 
           root = Path("output")
-          bundle_path = root / f"gmail-candidate-review-{os.environ['RUN_ID']}.zip"
+          bundle_path = root / f"gmail-candidate-weekly-review-{os.environ['RUN_ID']}.zip"
           include_paths = [
-              root / "candidates.html",
-              root / "calendar_preview.html",
-              root / "calendar_create.html",
-              root / "candidates.csv",
-              root / "candidates.json",
-              root / "calendar_preview.json",
-              root / "calendar_create.json",
+              root / "weekly_candidates.html",
+              root / "weekly_candidates.csv",
+              root / "weekly_candidates.json",
           ]
 
           with zipfile.ZipFile(bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
@@ -102,11 +117,11 @@ jobs:
               handle.write(f"REVIEW_BUNDLE={bundle_path}\n")
           PY
 
-      - name: Email private review bundle
-        if: ${{ env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.OPERATOR_EMAIL_TO != '' }}
+      - name: Email weekly review bundle
+        if: ${{ env.WEEKLY_EMAIL_ENABLED == '1' && env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.OPERATOR_EMAIL_TO != '' }}
         env:
           REVIEW_BUNDLE: ${{ env.REVIEW_BUNDLE }}
-          GMAIL_SCAN_QUERY: ${{ env.GMAIL_SCAN_QUERY }}
+          GMAIL_WEEKLY_SUMMARY_QUERY: ${{ env.GMAIL_WEEKLY_SUMMARY_QUERY }}
           RUN_ID: ${{ env.RUN_ID }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_RUN_ID: ${{ github.run_id }}
@@ -124,7 +139,7 @@ jobs:
           sender = os.environ["OPERATOR_EMAIL_FROM"]
 
           message = EmailMessage()
-          message["Subject"] = f"Gmail candidate review bundle {os.environ['RUN_ID']}"
+          message["Subject"] = f"Gmail weekly candidate summary {os.environ['RUN_ID']}"
           message["From"] = sender
           message["To"] = recipient
           message.set_content(
@@ -133,9 +148,9 @@ jobs:
                       f"Repository: {os.environ['GITHUB_REPOSITORY']}",
                       f"Run ID: {os.environ['RUN_ID']}",
                       f"Workflow run: https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
-                      f"Query: {os.environ['GMAIL_SCAN_QUERY']}",
+                      f"Weekly summary query: {os.environ['GMAIL_WEEKLY_SUMMARY_QUERY']}",
                       "",
-                      "Attached ZIP includes the private review outputs from this run.",
+                      "Attached ZIP includes the seven-day private candidate summary.",
                   ]
               )
           )

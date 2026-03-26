@@ -3,6 +3,7 @@
 Deterministic Gmail-to-Google-Calendar automation with:
 
 - a public summary dashboard on GitHub Pages
+- a private operator dashboard bundle for row-level review
 - a scheduled GitHub Actions backend
 - a local Python CLI for development, debugging, and first-time OAuth setup
 
@@ -20,6 +21,7 @@ The product has three layers:
 
 - GitHub Actions runs the actual Gmail scan and Google Calendar write flow on a schedule
 - GitHub Pages publishes a redacted public summary of the latest and historical runs
+- a private static operator dashboard is built from the full private JSON artifacts for browser review
 - the Python package remains the execution engine for discovery, preview, create, and dedupe
 
 Current pipeline:
@@ -28,6 +30,7 @@ Current pipeline:
 gmail-candidate-scan discover --query '...'
 gmail-candidate-scan calendar-preview
 gmail-candidate-scan calendar-create
+gmail-candidate-scan operator-build
 gmail-candidate-scan pages-build
 ```
 
@@ -60,6 +63,57 @@ Not publicly exposed:
 
 Private operator outputs stay in GitHub Actions artifacts and local files under `output/`.
 
+## Private Operator Dashboard
+
+The repo now includes a second dashboard source under:
+
+- `operator/`
+
+It is intentionally separate from the public `docs/` site.
+
+What it does:
+
+- loads full private discovery, preview, and create JSON
+- shows row-level candidates, preview rows, and create outcomes in one browser UI
+- supports run switching, category filtering, and text search
+- keeps public Pages unchanged and redacted
+
+How it is built:
+
+```bash
+gmail-candidate-scan operator-build \
+  --site-dir /Users/kalter/Documents/CODEX/googlescript/operator \
+  --output-dir /Users/kalter/Documents/CODEX/googlescript/output/operator-dashboard
+```
+
+How to review it locally in a browser:
+
+```bash
+gmail-candidate-scan operator-serve \
+  --dir /Users/kalter/Documents/CODEX/googlescript/output/operator-dashboard \
+  --port 8123
+```
+
+Private operator bundle outputs:
+
+- `output/operator-dashboard/index.html`
+- `output/operator-dashboard/data/latest/`
+- `output/operator-dashboard/data/runs/<run_id>/`
+- `output/operator-dashboard/data/runs/index.json`
+
+Security model:
+
+- the operator dashboard has no built-in auth layer
+- privacy comes from where the bundle is stored and served
+- the default implementation keeps it in local files and private GitHub Actions artifacts only
+- do not publish `output/operator-dashboard/` to GitHub Pages or any public bucket
+
+Pragmatic hosting recommendation:
+
+- first implementation: keep using private GitHub Actions artifacts plus local browser viewing
+- next step if you want zero-download access: deploy the same static bundle to a private static host behind access control such as Cloudflare Access or an authenticated object store/CDN path
+- avoid putting private candidate JSON behind the public GitHub Pages site because the repo and site are intentionally public
+
 ## Hosted Automation
 
 The repository includes `.github/workflows/publish_gmail_candidate_pages.yml`.
@@ -70,13 +124,31 @@ It:
 - also supports manual workflow dispatch
 - runs discovery, preview, create, and Pages build
 - uploads full `output/` artifacts privately in GitHub Actions
+- can optionally email a private weekly ZIP candidate summary on Mondays (Europe/Berlin)
 - publishes the redacted dashboard to `gh-pages`
 
 Required GitHub configuration:
 
 - repository secret: `GMAIL_CANDIDATE_TOKEN_JSON`
 - optional repository variable: `GMAIL_SCAN_QUERY`
+- optional repository variable: `GMAIL_WEEKLY_SUMMARY_QUERY`
 - GitHub Pages source: `gh-pages` branch, `/ (root)`
+
+Optional email delivery secrets:
+
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+- `OPERATOR_EMAIL_TO`
+- `OPERATOR_EMAIL_FROM` (optional, defaults to `SMTP_USERNAME`)
+
+Email delivery behavior:
+
+- if the SMTP secrets are present, the workflow sends a ZIP attachment on Mondays in the `Europe/Berlin` timezone
+- the ZIP includes `weekly_candidates.html`, `weekly_candidates.csv`, and `weekly_candidates.json`
+- the weekly summary is generated from a separate seven-day discovery query and does not change the daily preview/create run
+- this is more convenient than downloading artifacts manually, but it moves private candidate data into your email inbox
 
 ## Local Development
 
@@ -158,6 +230,12 @@ Pages build writes:
 - `output/pages/data/latest/`
 - `output/pages/data/runs/<run_id>/`
 - `output/pages/data/runs/index.json`
+
+Operator build writes:
+
+- `output/operator-dashboard/data/latest/`
+- `output/operator-dashboard/data/runs/<run_id>/`
+- `output/operator-dashboard/data/runs/index.json`
 
 ## CI Auth
 
