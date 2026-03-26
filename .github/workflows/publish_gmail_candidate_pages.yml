@@ -36,13 +36,13 @@ jobs:
       OPERATOR_EMAIL_FROM: ${{ secrets.OPERATOR_EMAIL_FROM || secrets.SMTP_USERNAME }}
     steps:
       - name: Check out default branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Generate run ID
         run: echo "RUN_ID=$(date -u +%Y%m%d_%H%M%S)" >> "$GITHUB_ENV"
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 
@@ -72,7 +72,7 @@ jobs:
             --run-id "${RUN_ID}"
 
       - name: Upload private operator artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: gmail-candidate-output-${{ env.RUN_ID }}
           path: output/
@@ -179,7 +179,7 @@ jobs:
 
       - name: Check out gh-pages branch
         id: checkout_pages
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         continue-on-error: true
         with:
           ref: gh-pages
