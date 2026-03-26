@@ -66,7 +66,7 @@ class CalendarEventDraft:
 
     @property
     def identity(self) -> str:
-        return f"{IDENTITY_PREFIX}{self.candidate.gmail_id}"
+        return build_identity_marker(self.candidate.gmail_id)
 
     @property
     def is_all_day(self) -> bool:
@@ -456,7 +456,7 @@ def ensure_calendar_exists(calendar_service, calendar_name: str) -> str:
 
 
 def event_exists(calendar_service, calendar_id: str, identity: str) -> bool:
-    gmail_id = identity.removeprefix(f"{IDENTITY_PREFIX}")
+    gmail_id = parse_identity_marker(identity)
     response = calendar_service.events().list(
         calendarId=calendar_id,
         privateExtendedProperty=[f"{IDENTITY_FIELD}={gmail_id}"],
@@ -496,6 +496,14 @@ def create_event(calendar_service, calendar_id: str, draft: CalendarEventDraft) 
     calendar_service.events().insert(calendarId=calendar_id, body=body).execute()
 
 
+def build_identity_marker(gmail_id: str) -> str:
+    return f"{IDENTITY_PREFIX}{gmail_id}"
+
+
+def parse_identity_marker(identity: str) -> str:
+    return identity.removeprefix(IDENTITY_PREFIX)
+
+
 def _local_timezone_name() -> str:
     local_dt = datetime.now().astimezone()
     tzinfo = local_dt.tzinfo
@@ -531,7 +539,7 @@ def _build_notes(
     flight_details: "FlightDetails | None",
 ) -> str:
     parts = [
-        f"{IDENTITY_PREFIX}{candidate.gmail_id}",
+        build_identity_marker(candidate.gmail_id),
         f"category={candidate.category}",
         f"sender={candidate.sender}",
         f"subject={candidate.subject}",
