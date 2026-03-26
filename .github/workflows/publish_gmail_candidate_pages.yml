@@ -22,6 +22,12 @@ jobs:
       GMAIL_SCAN_QUERY: ${{ inputs.gmail_query || vars.GMAIL_SCAN_QUERY || 'in:anywhere -in:chats newer_than:2d' }}
       RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
       CALENDAR_NAME: Email-Derived Events
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT || '465' }}
+      SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      OPERATOR_EMAIL_TO: ${{ secrets.OPERATOR_EMAIL_TO }}
+      OPERATOR_EMAIL_FROM: ${{ secrets.OPERATOR_EMAIL_FROM || secrets.SMTP_USERNAME }}
     steps:
       - name: Check out default branch
         uses: actions/checkout@v4
@@ -66,7 +72,7 @@ jobs:
           path: output/
 
       - name: Package private review bundle for email
-        if: ${{ secrets.SMTP_HOST != '' && secrets.SMTP_USERNAME != '' && secrets.SMTP_PASSWORD != '' && secrets.OPERATOR_EMAIL_TO != '' }}
+        if: ${{ env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.OPERATOR_EMAIL_TO != '' }}
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -97,14 +103,8 @@ jobs:
           PY
 
       - name: Email private review bundle
-        if: ${{ secrets.SMTP_HOST != '' && secrets.SMTP_USERNAME != '' && secrets.SMTP_PASSWORD != '' && secrets.OPERATOR_EMAIL_TO != '' }}
+        if: ${{ env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.OPERATOR_EMAIL_TO != '' }}
         env:
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT || '465' }}
-          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          OPERATOR_EMAIL_TO: ${{ secrets.OPERATOR_EMAIL_TO }}
-          OPERATOR_EMAIL_FROM: ${{ secrets.OPERATOR_EMAIL_FROM || secrets.SMTP_USERNAME }}
           REVIEW_BUNDLE: ${{ env.REVIEW_BUNDLE }}
           GMAIL_SCAN_QUERY: ${{ env.GMAIL_SCAN_QUERY }}
           RUN_ID: ${{ env.RUN_ID }}
