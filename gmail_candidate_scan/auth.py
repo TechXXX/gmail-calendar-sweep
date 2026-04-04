@@ -14,6 +14,7 @@ NONINTERACTIVE_ENV = "GMAIL_CANDIDATE_NONINTERACTIVE"
 
 def load_credentials(credentials_path: Path, token_path: Path, scopes: list[str] | tuple[str, ...] | None = None):
     from google.auth.transport.requests import Request
+    from google.auth.exceptions import RefreshError
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import InstalledAppFlow
 
@@ -37,8 +38,18 @@ def load_credentials(credentials_path: Path, token_path: Path, scopes: list[str]
         return creds
 
     if creds and creds.expired and creds.refresh_token and creds.has_scopes(required_scopes):
-        creds.refresh(Request())
-    else:
+        try:
+            creds.refresh(Request())
+        except RefreshError as exc:
+            if noninteractive:
+                raise RuntimeError(
+                    "Non-interactive auth could not refresh the authorized Google token. "
+                    f"{TOKEN_JSON_ENV} appears expired or revoked. "
+                    "Run a local interactive Gmail/Calendar command to generate a fresh authorized token, "
+                    "then update the GitHub Actions repository secret GMAIL_CANDIDATE_TOKEN_JSON."
+                ) from exc
+            creds = None
+    if creds is None:
         if noninteractive:
             raise RuntimeError(
                 "Non-interactive auth could not load a valid authorized token with the required scopes. "

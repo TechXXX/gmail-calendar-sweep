@@ -192,6 +192,14 @@ In non-interactive mode the tool:
 - refreshes it when possible
 - fails instead of opening a browser if the token is missing or under-scoped
 
+If GitHub Actions fails with an expired or revoked token:
+
+1. Run a local interactive command such as `gmail-candidate-scan discover --query 'in:anywhere -in:chats newer_than:2d'`.
+2. Complete the Google OAuth browser flow locally.
+3. Copy the refreshed contents of `/Users/kalter/Documents/CODEX/googlescript/secrets/gmail_token.json`.
+4. Update the GitHub repository secret `GMAIL_CANDIDATE_TOKEN_JSON` with that full JSON payload.
+5. Re-run the workflow in GitHub Actions.
+
 ## Implementation Notes
 
 The current implementation is all deterministic heuristics plus Google APIs.
