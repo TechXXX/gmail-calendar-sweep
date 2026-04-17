@@ -898,7 +898,8 @@ def _extract_stay_range(candidate: Candidate) -> tuple[date, date] | None:
             return None
         year = internal_dt.year
         start_date = date(year, month, start_day)
-        end_date = date(year, month, end_day)
+        # Google Calendar all-day end dates are exclusive, so add one day.
+        end_date = date(year, month, end_day) + timedelta(days=1)
         return start_date, end_date
 
     cross_month = re.search(
@@ -916,7 +917,8 @@ def _extract_stay_range(candidate: Candidate) -> tuple[date, date] | None:
         year = internal_dt.year
         start_date = date(year, start_month, start_day)
         end_year = year + 1 if end_month < start_month else year
-        end_date = date(end_year, end_month, end_day)
+        # Google Calendar all-day end dates are exclusive, so add one day.
+        end_date = date(end_year, end_month, end_day) + timedelta(days=1)
         return start_date, end_date
 
     return None
@@ -1052,11 +1054,15 @@ def _default_end_time(start_time: time) -> time:
 
 def _draft_label(draft: CalendarEventDraft) -> str:
     if draft.is_all_day:
-        return f"all_day:{draft.all_day_start}->{draft.all_day_end}"
+        return f"all_day:{draft.all_day_start}->{_inclusive_all_day_end(draft)}"
     return f"timed:{draft.start_at.isoformat()}->{draft.end_at.isoformat()}"
 
 
 def _draft_timing_label(draft: CalendarEventDraft) -> str:
     if draft.is_all_day:
-        return f"{draft.all_day_start.isoformat()} to {draft.all_day_end.isoformat()} (all day)"
+        return f"{draft.all_day_start.isoformat()} to {_inclusive_all_day_end(draft).isoformat()} (all day)"
     return f"{draft.start_at.isoformat()} to {draft.end_at.isoformat()}"
+
+
+def _inclusive_all_day_end(draft: CalendarEventDraft) -> date:
+    return draft.all_day_end - timedelta(days=1)

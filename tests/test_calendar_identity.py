@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import unittest
-from datetime import datetime
+from datetime import date, datetime
 
 from gmail_candidate_scan.calendar_integration import (
     CalendarEventDraft,
+    CandidateRow,
+    _draft_timing_label,
     build_identity_marker,
     create_event,
     event_exists,
     parse_identity_marker,
+    prepare_calendar_draft,
 )
 from gmail_candidate_scan.extraction import Candidate
 
@@ -122,6 +125,48 @@ class CalendarIdentityTests(unittest.TestCase):
         self.assertEqual(kwargs["calendarId"], "calendar-1")
         self.assertEqual(body["extendedProperties"]["private"]["gmail_candidate_id"], candidate.gmail_id)
         self.assertIn(build_identity_marker(candidate.gmail_id), body["description"])
+
+    def test_prepare_calendar_draft_uses_exclusive_end_for_stays(self) -> None:
+        candidate = Candidate(
+            gmail_id="gmail-message-456",
+            thread_id="thread-2",
+            internal_datetime="2026-04-10T15:17:00+02:00",
+            category="travel",
+            confidence=6,
+            sender="Airbnb",
+            sender_email="automated@airbnb.com",
+            subject="Bestätigt: Aufenthalt vom 13.–17. April – Quittung von Airbnb",
+            matched_dates=("13 Apr", "17 Apr"),
+            matched_times=("16:00",),
+            reason_flags=("category:travel",),
+            snippet="Check in Mon 13 Apr, check out Fri 17 Apr.",
+        )
+
+        draft = prepare_calendar_draft(CandidateRow(html_row_number=1, candidate=candidate))
+
+        assert draft is not None
+        self.assertEqual(draft.all_day_start, date(2026, 4, 13))
+        self.assertEqual(draft.all_day_end, date(2026, 4, 18))
+        self.assertEqual(_draft_timing_label(draft), "2026-04-13 to 2026-04-17 (all day)")
+
+    def test_create_event_writes_exclusive_end_for_all_day_stays(self) -> None:
+        service = _CalendarService()
+        candidate = _candidate()
+        draft = CalendarEventDraft(
+            candidate=candidate,
+            title="Stay in Oberndorf",
+            notes=build_identity_marker(candidate.gmail_id),
+            all_day_start=date(2026, 4, 13),
+            all_day_end=date(2026, 4, 18),
+        )
+
+        create_event(service, "calendar-1", draft)
+
+        kwargs = service.insert_call.last_kwargs
+        assert kwargs is not None
+        body = kwargs["body"]
+        self.assertEqual(body["start"], {"date": "2026-04-13"})
+        self.assertEqual(body["end"], {"date": "2026-04-18"})
 
 
 if __name__ == "__main__":
