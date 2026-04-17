@@ -197,8 +197,10 @@ def create_calendar_events(
 
     if not dry_run:
         ensured_calendar_id = ensure_calendar_exists(calendar_service, calendar_name)
+        primary_calendar_id = find_primary_calendar_id(calendar_service)
     else:
         ensured_calendar_id = None
+        primary_calendar_id = None
 
     contexts = _build_calendar_contexts(candidates)
 
@@ -239,6 +241,18 @@ def create_calendar_events(
                 )
             )
             created += 1
+            continue
+
+        if primary_calendar_id and native_gmail_event_exists(calendar_service, primary_calendar_id, draft):
+            skipped_existing += 1
+            lines.append(
+                CalendarActionLine(
+                    html_row_number=candidate_row.html_row_number,
+                    subject=draft.title,
+                    outcome="skipped_existing",
+                    detail="native_gmail_event",
+                )
+            )
             continue
 
         if event_exists(calendar_service, ensured_calendar_id, draft.identity):
@@ -292,6 +306,7 @@ def preview_calendar_events(
 ) -> tuple[CalendarPreviewRow, ...]:
     rows: list[CalendarPreviewRow] = []
     calendar_id = find_calendar_id(calendar_service, calendar_name)
+    primary_calendar_id = find_primary_calendar_id(calendar_service)
 
     for context in _build_calendar_contexts(candidates):
         candidate_row = context.row
@@ -339,7 +354,9 @@ def preview_calendar_events(
             continue
 
         outcome = "would_create"
-        if calendar_id and event_exists(calendar_service, calendar_id, draft.identity):
+        if primary_calendar_id and native_gmail_event_exists(calendar_service, primary_calendar_id, draft):
+            outcome = "skipped_existing"
+        elif calendar_id and event_exists(calendar_service, calendar_id, draft.identity):
             outcome = "skipped_existing"
 
         rows.append(
@@ -447,6 +464,18 @@ def find_calendar_id(calendar_service, calendar_name: str) -> str | None:
             return None
 
 
+def find_primary_calendar_id(calendar_service) -> str | None:
+    page_token = None
+    while True:
+        response = calendar_service.calendarList().list(pageToken=page_token).execute()
+        for item in response.get("items", []):
+            if item.get("primary"):
+                return item["id"]
+        page_token = response.get("nextPageToken")
+        if not page_token:
+            return None
+
+
 def ensure_calendar_exists(calendar_service, calendar_name: str) -> str:
     existing_id = find_calendar_id(calendar_service, calendar_name)
     if existing_id:
@@ -464,6 +493,23 @@ def event_exists(calendar_service, calendar_id: str, identity: str) -> bool:
         singleEvents=False,
     ).execute()
     return bool(response.get("items"))
+
+
+def native_gmail_event_exists(calendar_service, calendar_id: str, draft: CalendarEventDraft) -> bool:
+    if not draft.is_all_day or draft.candidate.category != "travel":
+        return False
+
+    response = calendar_service.events().list(
+        calendarId=calendar_id,
+        timeMin=datetime.combine(draft.all_day_start, time.min).astimezone().isoformat(),
+        timeMax=datetime.combine(draft.all_day_end, time.min).astimezone().isoformat(),
+        singleEvents=True,
+        maxResults=50,
+    ).execute()
+    for event in response.get("items", []):
+        if _is_native_gmail_duplicate_event(draft, event):
+            return True
+    return False
 
 
 def create_event(calendar_service, calendar_id: str, draft: CalendarEventDraft) -> None:
@@ -1050,6 +1096,69 @@ def _month_number(raw: str) -> int | None:
 def _default_end_time(start_time: time) -> time:
     start_dt = datetime.combine(date(2000, 1, 1), start_time) + timedelta(hours=2)
     return start_dt.time()
+
+
+def _is_native_gmail_duplicate_event(draft: CalendarEventDraft, event: dict) -> bool:
+    if event.get("eventType") != "fromGmail":
+        return False
+
+    start_date = event.get("start", {}).get("date")
+    end_date = event.get("end", {}).get("date")
+    if start_date != draft.all_day_start.isoformat():
+        return False
+    if end_date != draft.all_day_end.isoformat():
+        return False
+
+    draft_text = " ".join(part for part in (draft.title, draft.location or "") if part)
+    event_text = " ".join(
+        part
+        for part in (
+            event.get("summary", ""),
+            event.get("location", ""),
+            event.get("description", ""),
+        )
+        if part
+    )
+
+    draft_postcodes = _postal_code_tokens(draft_text)
+    event_postcodes = _postal_code_tokens(event_text)
+    if draft_postcodes and event_postcodes and draft_postcodes.intersection(event_postcodes):
+        return True
+
+    shared_tokens = _significant_tokens(draft_text).intersection(_significant_tokens(event_text))
+    return len(shared_tokens) >= 2
+
+
+def _postal_code_tokens(value: str) -> set[str]:
+    return {match.group(0) for match in re.finditer(r"\b\d{4,5}\b", value)}
+
+
+def _significant_tokens(value: str) -> set[str]:
+    normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii").lower()
+    stopwords = {
+        "the",
+        "and",
+        "for",
+        "from",
+        "gmail",
+        "event",
+        "email",
+        "created",
+        "received",
+        "stay",
+        "at",
+        "von",
+        "by",
+        "vom",
+        "aufenthalt",
+        "germany",
+    }
+    tokens = {
+        token
+        for token in re.findall(r"[a-z0-9]{4,}", normalized)
+        if token not in stopwords
+    }
+    return tokens
 
 
 def _draft_label(draft: CalendarEventDraft) -> str:

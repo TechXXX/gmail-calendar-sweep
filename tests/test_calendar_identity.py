@@ -7,6 +7,7 @@ from gmail_candidate_scan.calendar_integration import (
     CalendarEventDraft,
     CandidateRow,
     _draft_timing_label,
+    _is_native_gmail_duplicate_event,
     build_identity_marker,
     create_event,
     event_exists,
@@ -167,6 +168,48 @@ class CalendarIdentityTests(unittest.TestCase):
         body = kwargs["body"]
         self.assertEqual(body["start"], {"date": "2026-04-13"})
         self.assertEqual(body["end"], {"date": "2026-04-18"})
+
+    def test_native_gmail_duplicate_detects_matching_stay(self) -> None:
+        candidate = _candidate()
+        draft = CalendarEventDraft(
+            candidate=candidate,
+            title="Aufenthalt vom 13.–17. April - 21787 Oberndorf, Germany - Von Dollen By Interhome",
+            notes=build_identity_marker(candidate.gmail_id),
+            location="Bentwisch 34, 21787 Oberndorf, Germany",
+            all_day_start=date(2026, 4, 13),
+            all_day_end=date(2026, 4, 18),
+        )
+        event = {
+            "eventType": "fromGmail",
+            "summary": "Stay at Am Ostedeich by Interhome",
+            "location": "bd Kirche 2, 21787 Oberndorf, Germany",
+            "description": "This event was created from an email that you received in Gmail.",
+            "start": {"date": "2026-04-13"},
+            "end": {"date": "2026-04-18"},
+        }
+
+        self.assertTrue(_is_native_gmail_duplicate_event(draft, event))
+
+    def test_native_gmail_duplicate_rejects_different_dates(self) -> None:
+        candidate = _candidate()
+        draft = CalendarEventDraft(
+            candidate=candidate,
+            title="Stay in Oberndorf",
+            notes=build_identity_marker(candidate.gmail_id),
+            location="Bentwisch 34, 21787 Oberndorf, Germany",
+            all_day_start=date(2026, 4, 13),
+            all_day_end=date(2026, 4, 18),
+        )
+        event = {
+            "eventType": "fromGmail",
+            "summary": "Stay at Am Ostedeich by Interhome",
+            "location": "bd Kirche 2, 21787 Oberndorf, Germany",
+            "description": "This event was created from an email that you received in Gmail.",
+            "start": {"date": "2026-04-21"},
+            "end": {"date": "2026-04-25"},
+        }
+
+        self.assertFalse(_is_native_gmail_duplicate_event(draft, event))
 
 
 if __name__ == "__main__":
