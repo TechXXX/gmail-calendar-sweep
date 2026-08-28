@@ -1,7 +1,29 @@
 {
-  "generated_at": "2026-08-27T16:29:32.754077+00:00",
-  "latest_run_id": "20260827_162906",
+  "generated_at": "2026-08-28T17:25:47.377703+00:00",
+  "latest_run_id": "20260828_172525",
   "runs": [
+    {
+      "run_id": "20260828_172525",
+      "generated_at": "2026-08-28T17:25:36.084165+00:00",
+      "query": "in:anywhere -in:chats newer_than:2d",
+      "candidate_count": 0,
+      "new_candidates": 0,
+      "scanned_message_count": 22,
+      "would_create": 0,
+      "skipped_existing_preview": 0,
+      "skipped_ambiguous_preview": 0,
+      "created": 0,
+      "skipped_existing_create": 0,
+      "skipped_ambiguous_create": 0,
+      "skipped_duplicate_create": 0,
+      "failed": 0,
+      "dry_run": false,
+      "paths": {
+        "discover": "./20260828_172525/discover.json",
+        "preview": "./20260828_172525/preview.json",
+        "create": "./20260828_172525/create.json"
+      }
+    },
     {
       "run_id": "20260827_162906",
       "generated_at": "2026-08-27T16:29:18.634814+00:00",
