@@ -1,0 +1,15 @@
+{
+  "run_id": "20261011_112253",
+  "generated_at": "2026-10-11T11:23:10.081201+00:00",
+  "query": "in:anywhere -in:chats newer_than:2d",
+  "calendar_name": "Email-Derived Events",
+  "summary": {
+    "row_count": 0,
+    "would_create": 0,
+    "skipped_existing": 0,
+    "skipped_ambiguous": 0,
+    "skipped_duplicate": 0,
+    "outcome_counts": {},
+    "category_counts": {}
+  }
+}
