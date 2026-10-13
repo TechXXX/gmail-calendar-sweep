@@ -1,0 +1,24 @@
+{
+  "run_id": "20261013_124041",
+  "generated_at": "2026-10-13T12:40:51.299548+00:00",
+  "query": "in:anywhere -in:chats newer_than:2d",
+  "summary": {
+    "candidate_count": 1,
+    "scanned_message_count": 60,
+    "top_category": "travel (1)",
+    "highest_confidence": 4,
+    "new_candidates": 1,
+    "category_counts": {
+      "travel": 1
+    },
+    "new_category_counts": {
+      "travel": 1
+    },
+    "confidence_counts": {
+      "4": 1
+    }
+  },
+  "candidate_hashes": [
+    "52cc9140e67371d8880f838004cdbe7ee108846cf79223dc6661e8878120ee7e"
+  ]
+}
