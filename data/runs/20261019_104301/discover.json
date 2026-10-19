@@ -1,0 +1,16 @@
+{
+  "run_id": "20261019_104301",
+  "generated_at": "2026-10-19T10:43:11.183386+00:00",
+  "query": "in:anywhere -in:chats newer_than:2d",
+  "summary": {
+    "candidate_count": 0,
+    "scanned_message_count": 33,
+    "top_category": "n/a",
+    "highest_confidence": 0,
+    "new_candidates": 0,
+    "category_counts": {},
+    "new_category_counts": {},
+    "confidence_counts": {}
+  },
+  "candidate_hashes": []
+}
