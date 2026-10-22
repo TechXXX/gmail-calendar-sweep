@@ -1,15 +1,19 @@
 {
-  "run_id": "20261021_100518",
-  "generated_at": "2026-10-21T10:05:37.162151+00:00",
+  "run_id": "20261022_100805",
+  "generated_at": "2026-10-22T10:08:22.437692+00:00",
   "query": "in:anywhere -in:chats newer_than:2d",
   "calendar_name": "Email-Derived Events",
   "summary": {
-    "row_count": 0,
+    "row_count": 1,
     "would_create": 0,
-    "skipped_existing": 0,
+    "skipped_existing": 1,
     "skipped_ambiguous": 0,
     "skipped_duplicate": 0,
-    "outcome_counts": {},
-    "category_counts": {}
+    "outcome_counts": {
+      "skipped_existing": 1
+    },
+    "category_counts": {
+      "travel": 1
+    }
   }
 }

@@ -1,16 +1,24 @@
 {
-  "run_id": "20261021_100518",
-  "generated_at": "2026-10-21T10:05:27.039979+00:00",
+  "run_id": "20261022_100805",
+  "generated_at": "2026-10-22T10:08:12.736237+00:00",
   "query": "in:anywhere -in:chats newer_than:2d",
   "summary": {
-    "candidate_count": 0,
-    "scanned_message_count": 43,
-    "top_category": "n/a",
-    "highest_confidence": 0,
-    "new_candidates": 0,
-    "category_counts": {},
-    "new_category_counts": {},
-    "confidence_counts": {}
+    "candidate_count": 1,
+    "scanned_message_count": 41,
+    "top_category": "travel (1)",
+    "highest_confidence": 5,
+    "new_candidates": 1,
+    "category_counts": {
+      "travel": 1
+    },
+    "new_category_counts": {
+      "travel": 1
+    },
+    "confidence_counts": {
+      "5": 1
+    }
   },
-  "candidate_hashes": []
+  "candidate_hashes": [
+    "47184275d63ae0e34917a4311b763a67206e554cb0499bd5bbe74d1cb6e8e319"
+  ]
 }
