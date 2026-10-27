@@ -1,25 +1,33 @@
 {
-  "run_id": "20261026_110229",
-  "generated_at": "2026-10-26T11:02:39.244358+00:00",
+  "run_id": "20261027_103012",
+  "generated_at": "2026-10-27T10:30:24.303855+00:00",
   "query": "in:anywhere -in:chats newer_than:2d",
   "summary": {
-    "candidate_count": 2,
-    "scanned_message_count": 39,
-    "top_category": "travel (2)",
+    "candidate_count": 6,
+    "scanned_message_count": 64,
+    "top_category": "travel (4)",
     "highest_confidence": 5,
-    "new_candidates": 2,
+    "new_candidates": 4,
     "category_counts": {
-      "travel": 2
+      "travel": 4,
+      "event": 2
     },
     "new_category_counts": {
-      "travel": 2
+      "travel": 2,
+      "event": 2
     },
     "confidence_counts": {
-      "5": 2
+      "5": 4,
+      "4": 1,
+      "3": 1
     }
   },
   "candidate_hashes": [
     "4edc6e81debbbafaa94f8e269908a7725761d0b632c4590754a8a72036f7a1a8",
-    "15ce27cc80aa558993d1b3c70bd8124c93509b7d97a80d8ebf998d9cc7e77b36"
+    "15ce27cc80aa558993d1b3c70bd8124c93509b7d97a80d8ebf998d9cc7e77b36",
+    "227a6a6aa2b39f4baf754f535a88c18f63c266d4c63da941d04a6ad2630926a5",
+    "8204bdbf8ed7b3254cce5263233b9ed8354052c13d43d739e53f9e8f09af5970",
+    "b406935164c9628aa8fe0b8fb282fc7de7b4c719e4a7eb8e91f5ddd2a4b16244",
+    "968cbe2bb969f6f98660d831af9f5ddbf35fb35cd82e54c356a1304170b411d2"
   ]
 }
