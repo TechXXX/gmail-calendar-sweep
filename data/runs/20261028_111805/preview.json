@@ -1,0 +1,21 @@
+{
+  "run_id": "20261028_111805",
+  "generated_at": "2026-10-28T11:18:33.481455+00:00",
+  "query": "in:anywhere -in:chats newer_than:2d",
+  "calendar_name": "Email-Derived Events",
+  "summary": {
+    "row_count": 5,
+    "would_create": 0,
+    "skipped_existing": 1,
+    "skipped_ambiguous": 4,
+    "skipped_duplicate": 0,
+    "outcome_counts": {
+      "skipped_ambiguous": 4,
+      "skipped_existing": 1
+    },
+    "category_counts": {
+      "travel": 3,
+      "event": 2
+    }
+  }
+}
