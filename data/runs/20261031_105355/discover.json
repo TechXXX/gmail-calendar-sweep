@@ -1,0 +1,29 @@
+{
+  "run_id": "20261031_105355",
+  "generated_at": "2026-10-31T10:54:01.853729+00:00",
+  "query": "in:anywhere -in:chats newer_than:2d",
+  "summary": {
+    "candidate_count": 3,
+    "scanned_message_count": 45,
+    "top_category": "delivery (2)",
+    "highest_confidence": 6,
+    "new_candidates": 1,
+    "category_counts": {
+      "delivery": 2,
+      "travel": 1
+    },
+    "new_category_counts": {
+      "delivery": 1
+    },
+    "confidence_counts": {
+      "4": 1,
+      "5": 1,
+      "6": 1
+    }
+  },
+  "candidate_hashes": [
+    "d46226caec54e516b3157cb6363255304c14b13effe31f60a17a300813770d6f",
+    "72fbf71efa07a32ca4c37e10fdf09163086a332cce846139940e69bc3c66c1ce",
+    "f930902b38c4234cc05af86669d98af83035387b38a96e0ede80dfc4d06e07de"
+  ]
+}
