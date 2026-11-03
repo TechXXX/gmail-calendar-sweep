@@ -1,6 +1,6 @@
 {
-  "run_id": "20261102_132704",
-  "generated_at": "2026-11-02T13:27:11.870525+00:00",
+  "run_id": "20261103_124458",
+  "generated_at": "2026-11-03T12:45:06.730820+00:00",
   "query": "in:anywhere -in:chats newer_than:2d",
   "summary": {
     "candidate_count": 0,
