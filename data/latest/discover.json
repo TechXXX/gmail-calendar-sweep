@@ -1,27 +1,16 @@
 {
-  "run_id": "20261112_134348",
-  "generated_at": "2026-11-12T13:43:56.736526+00:00",
+  "run_id": "20261113_130319",
+  "generated_at": "2026-11-13T13:03:26.634580+00:00",
   "query": "in:anywhere -in:chats newer_than:2d",
   "summary": {
-    "candidate_count": 4,
-    "scanned_message_count": 42,
-    "top_category": "event (2)",
-    "highest_confidence": 4,
+    "candidate_count": 0,
+    "scanned_message_count": 34,
+    "top_category": "n/a",
+    "highest_confidence": 0,
     "new_candidates": 0,
-    "category_counts": {
-      "event": 2,
-      "appointment": 2
-    },
+    "category_counts": {},
     "new_category_counts": {},
-    "confidence_counts": {
-      "4": 2,
-      "3": 2
-    }
+    "confidence_counts": {}
   },
-  "candidate_hashes": [
-    "9597767f314936f1f007925b87edbcd35fed99bf8327eb312ad8b5b3a5f0290a",
-    "279feeac81677420211aafd87d74f25977d1ea9aa086488ca45055160194478a",
-    "1d916f2bd347a81e3170c1f304e2ed43675c7a42e5adc6464a072de1a70c9be3",
-    "652a76fa78764518a7f316b5f2708efc02d44380e0bd05aeab2afd59c3ea7cd0"
-  ]
+  "candidate_hashes": []
 }
