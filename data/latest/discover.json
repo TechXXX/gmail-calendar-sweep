@@ -1,10 +1,10 @@
 {
-  "run_id": "20261113_130319",
-  "generated_at": "2026-11-13T13:03:26.634580+00:00",
+  "run_id": "20261114_120757",
+  "generated_at": "2026-11-14T12:08:05.414032+00:00",
   "query": "in:anywhere -in:chats newer_than:2d",
   "summary": {
     "candidate_count": 0,
-    "scanned_message_count": 34,
+    "scanned_message_count": 42,
     "top_category": "n/a",
     "highest_confidence": 0,
     "new_candidates": 0,
