@@ -1,15 +1,17 @@
 {
-  "run_id": "20261118_135427",
-  "generated_at": "2026-11-18T13:54:49.294904+00:00",
+  "run_id": "20261119_142309",
+  "generated_at": "2026-11-19T14:23:32.631039+00:00",
   "query": "in:anywhere -in:chats newer_than:2d",
   "calendar_name": "Email-Derived Events",
   "summary": {
     "created": 0,
     "skipped_existing": 0,
-    "skipped_ambiguous": 0,
+    "skipped_ambiguous": 1,
     "skipped_duplicate": 0,
     "failed": 0,
     "dry_run": false,
-    "outcome_counts": {}
+    "outcome_counts": {
+      "skipped_ambiguous": 1
+    }
   }
 }
