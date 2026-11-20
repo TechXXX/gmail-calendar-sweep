@@ -1,0 +1,22 @@
+{
+  "run_id": "20261120_135827",
+  "generated_at": "2026-11-20T13:58:37.036215+00:00",
+  "query": "in:anywhere -in:chats newer_than:2d",
+  "summary": {
+    "candidate_count": 1,
+    "scanned_message_count": 46,
+    "top_category": "event (1)",
+    "highest_confidence": 4,
+    "new_candidates": 0,
+    "category_counts": {
+      "event": 1
+    },
+    "new_category_counts": {},
+    "confidence_counts": {
+      "4": 1
+    }
+  },
+  "candidate_hashes": [
+    "31dcd73030d1a719c061b405b0ac8d841033c2e5882c4a8c5b01ef50711fbc6c"
+  ]
+}
