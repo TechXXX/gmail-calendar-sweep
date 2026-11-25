@@ -1,6 +1,6 @@
 {
-  "run_id": "20261124_155008",
-  "generated_at": "2026-11-24T15:50:24.738845+00:00",
+  "run_id": "20261125_153239",
+  "generated_at": "2026-11-25T15:32:56.778810+00:00",
   "query": "in:anywhere -in:chats newer_than:2d",
   "calendar_name": "Email-Derived Events",
   "summary": {
